@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.URAProviderDao">
+
+	<insert id="addProvider" parameterType="com.scyypt.entity.URAProvider">
+		INSERT INTO
+		role_provider(user_id,role_id,authority_id,status)
+		VALUES(#{user_id},#{role_id},#{authority_id},#{status})
+	</insert>
+
+	<update id="reviseAuthority" parameterType="com.scyypt.entity.URAProvider">
+		UPDATE
+		role_provider
+		SET
+		status =#{status}
+		WHERE user_id =#{user_id}
+		AND role_id ={role_id}
+		AND authority_id =#{authority_id}
+	</update>
+
+
+	<update id="updateAuthority" parameterType="com.scyypt.entity.URAProvider">
+		UPDATE role_provider SET operationId=#{operationId}
+		WHERE role_id=#{role_id} AND authority_id=#{authority_id}
+	</update>
+	
+</mapper>

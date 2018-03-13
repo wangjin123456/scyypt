@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.AuthorityDao">
+
+	<select id="getAllAuthority" resultType="com.scyypt.entity.Authority">
+		SELECT * FROM
+		tb_authority
+	</select>
+
+	<select id="findAuthority" resultType="com.scyypt.entity.Authority"
+		parameterType="String">
+		SELECT authority_id,operate FROM tb_authority WHERE
+		FIND_IN_SET(authority_id,(#{authority_id}))
+	</select>
+
+	<insert id="addAuthority" parameterType="com.scyypt.entity.Authority">
+		INSERT INTO
+		tb_authority(operate)
+		VALUES(#{operate})
+	</insert>
+
+	<update id="updateAuthority" parameterType="com.scyypt.entity.Authority">
+		UPDATE tb_authority
+		SET operate=#{operate}
+		WHERE authority_id=#{authority_id}
+	</update>
+
+	<delete id="delAuthority" parameterType="String">
+		<if test="authority_id !=null and authority_id !=''">
+			DELETE FROM tb_authority
+			WHERE authority_id=#{authority_id}
+		</if>
+	</delete>
+
+
+</mapper>

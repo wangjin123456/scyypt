@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ItemFollowUpDao">
+
+	 
+	 <select id="getDataListByStage" resultType="com.scyypt.bean.ItemNotesBean">
+		 
+		SELECT DISTINCT  users.accountUuid, notes.id, notes.fileId, notes.type, notes.message, notes.path, notes.title, notes.createtime
+		FROM item_followup up, item_user_notes users, item_notes notes 
+		WHERE up.itemId = #{itemId} and up.itemId = users.itemId and up.accountUuid = users.accountUuid and users.noteId = notes.id and up.stage = #{stage} ORDER BY notes.createtime LIMIT #{start},#{pageSize}
+ 		
+	</select>
+ 
+	
+	<insert id="add" parameterType="com.scyypt.entity.ItemFollowUpEntity" useGeneratedKeys="true" keyProperty="id">
+		
+		<selectKey keyProperty="id" resultType="int">  
+            select LAST_INSERT_ID()
+        </selectKey>
+        
+		insert into item_followup(itemId, userId, accountUuid, stage, state, comment)
+		values (#{itemId}, #{userId}, #{accountUuid}, #{stage}, #{state}, #{comment})
+	</insert>
+
+
+	<update id="edit" parameterType="com.scyypt.entity.ItemFollowUpEntity">
+		UPDATE item_followup SET
+		itemId = #{itemId},
+		userId = #{userId},
+		accountUuid = #{accountUuid},
+		stage = #{stage},
+		state = #{state},
+		comment = #{comment}
+		while id = #{id}
+	</update>
+	
+	
+	<delete id="del" parameterType="String">
+		DELETE FROM item_followup i
+		<where>
+			<if test="id !=null and id !=''">
+			 and i.id = #{id}
+			</if>
+		</where>
+	</delete>
+	
+	
+	<select id="info" resultType="com.scyypt.entity.ItemFollowUpEntity">
+		 
+		 SELECT i.* from item_followup i
+		<where>
+			<if test="id !=null and id !=''">
+			 and i.id = #{id}
+			</if>
+		</where>
+	</select>
+	
+	
+		
+	<select id="itemFollowStage" resultType="com.scyypt.entity.ItemFollowUpEntity">
+		 
+		 SELECT i.* from item_followup i
+		<where>
+			<if test="id !=null and id !=''">
+			 and i.id = #{id}
+			</if>
+		</where>
+	</select>
+	
+</mapper>

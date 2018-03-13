@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.CooperationTypeDao">
+
+
+	<select id="list" resultType="com.scyypt.entity.CooperationTypeEntity">
+		 
+		 SELECT c.*
+		 from cooperation_type c
+	</select>
+
+	<select id="info" resultType="com.scyypt.entity.CooperationTypeEntity">
+		 
+		 SELECT c.* from cooperation_type c
+		<where>
+			<if test="id !=null and id !=''">
+			 and c.id = #{id}
+			</if>
+		</where>
+	</select>
+	 
+	
+	<insert id="add" parameterType="com.scyypt.entity.CooperationTypeEntity" useGeneratedKeys="true" keyProperty="id">
+		
+		<selectKey keyProperty="id" resultType="int">  
+            select LAST_INSERT_ID()
+        </selectKey>
+        
+		insert into cooperation_type(name, comment)
+		values (#{name}, #{comment})
+	</insert>
+
+
+	<update id="edit" parameterType="com.scyypt.entity.CooperationTypeEntity">
+		UPDATE cooperation_type SET
+		name=#{name}, 
+		comment = #{comment}
+		where id=#{id}
+	</update>
+	
+	
+	<delete id="del" parameterType="String">
+		DELETE FROM cooperation_type WHERE id=#{id}
+	</delete>
+</mapper>

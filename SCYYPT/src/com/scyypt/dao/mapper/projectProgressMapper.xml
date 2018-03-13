@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ProjectProgressDao">
+	<!--查询全部项目进度 -->
+	<select id="findAllProjectProgress" resultType="com.scyypt.entity.ProjectProgress">
+		SELECT progressId,progressName,progressComment FROM project_progress
+	</select>
+
+
+
+</mapper>

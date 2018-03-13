@@ -1,0 +1,305 @@
+import { Component , Inject, forwardRef, OnInit, ComponentFactory, ComponentRef, ComponentFactoryResolver, ViewChild, ViewContainerRef, transition, Pipe } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Router,  ActivatedRoute, Params} from '@angular/router';
+
+import { PushService } from '../services/PushService';
+import { InterfaceService } from '../services/InterfaceService';
+import { StorageService } from '../services/StorageService';
+import { Global } from '../services/Global';
+
+import { WebClient } from '../services/WebClient';
+import { DomSanitizer } from '@angular/platform-browser'
+
+import { ToolMenuComponent } from '../public-component/tool-menu/tool-menu.component';
+import { isNull } from 'util';
+import { concat } from 'rxjs/operators/concat';
+import { dashCaseToCamelCase } from '@angular/compiler/src/util';
+import { connectableObservableDescriptor } from 'rxjs/observable/ConnectableObservable';
+
+
+let self : any;
+
+@Component({
+  selector: 'app-myproject',
+  templateUrl: './myproject.component.html',
+  styleUrls: ['./myproject.component.css']
+})
+export class MyprojectComponent implements OnInit { 
+  @ViewChild('toolmenu' ,{read : ViewContainerRef}) Tool : ViewContainerRef
+  private data : any = null;
+  public selectIndex : number;
+  public toolIndex : number;//控制工具的显示
+  public pageContent : any = {};//分页内容
+  public fuzzy : string; //关键字搜索的值
+  public ifshow : boolean = false;//控制工具的显示
+  public filterData : any;//过滤类型数据
+  public sendInfo : any;//发送的数据
+  public ifshowFollowUp : boolean = false;//跟进工具栏显示
+  public toolIndexFollowUp : number;//跟进工具栏显示
+  public remindTime : Date ;//提醒时间
+  public timer;//定时器
+  public reminderTimeEmail ;//时间提醒邮箱
+  public reminderTimeDate;//时间提醒提醒时间
+  public reminderTimeEmailInfo;//时间提醒提醒内容
+  public submitted : boolean = true;//时间提醒表单提交
+  public blockRecipients : boolean = false;//收件人或者收件人列表
+  public listRecipientsData : any = [];//收件人数据列表
+  public messageListSelf : any = [] ;//已发消息集合
+  public messageImgListSelf : any = [] ;//已发图片集合
+  public statusChanges;//取消订阅临时接受字段
+  public emailstatusChanges;//时间提醒订阅取消
+  public OAdataList : boolean = false;//收件人列表结构块
+  public tempAccountUuid; //操作的accountUuid
+  public tempItemId ; //操作的itemId
+  public projectListdata : any;//项目列表数据
+  public filter ;//过滤数据
+  public componentRef : ComponentRef<ToolMenuComponent>
+  public indexDBData = { name:'marketDB',version:3,db:null };//indexDB数据
+  private headImage : string = '../../assets/image/touxiang.jpg';
+  constructor( private interfaceService : InterfaceService, public webClient : WebClient, public datePipe : DatePipe, public domSanitizer:DomSanitizer,
+    @Inject (forwardRef (() => PushService)) public pushService: PushService, private storageService : StorageService, private comFacRef : ComponentFactoryResolver) {
+
+        //this.pushService.myProjectEvent$.subscribe(data => this.showData(data));
+
+        // 这里获取路由参数
+        //this.data = this.routerInfo.queryParams['data'];
+
+  //   // 拿到数据进行刷新
+  //   this.updateData(this.data);
+      self = this;
+  }
+
+  ngOnInit() {
+    this.doMyprojectList();
+    this.getFilterData();
+    this.initWebSocket();
+    this.timer = setInterval(()=>{
+      this.getNewDate()//检测变化
+    },1000);
+  }
+
+  /**
+   * 首次进来初始化webSocket
+   * initWebSocket
+   */
+  public initWebSocket() {
+    this.webClient.doConnectToServer();
+  }
+
+  doMyprojectList(){
+    this.interfaceService.doQueryMyprojectList(this.storageService.getValue(Global.USER_ACCOUNTID_KEY), 1, null,null,1);
+    this.pushService.myProjectListData$.subscribe((data) => {
+      if (data != null) {
+        //"{pageSize:20,totalNum:100,curPage:1,totalPage:2}"
+        console.log(data);
+        this.projectListdata = data.list;
+        this.pageContent.pageSize = data.pageSize;
+        this.pageContent.totalNum = data.totalRecord;
+        this.pageContent.curPage = data.currentPage;
+        this.pageContent.totalPage = data.totalPage
+        console.log(this.projectListdata);
+      }
+    })
+  }
+
+
+  getIndex(index){
+    this.selectIndex = index;
+    console.log(index);
+    console.log(this.selectIndex);
+  }
+
+  //获取过滤的数据
+  getFilterData(){
+    this.interfaceService.doQueryNegotiateType();
+    this.pushService.queryNegotiate_type$.subscribe((data)=>{
+      this.filterData = data;
+      console.log("获取数据"+this.filterData)
+    })
+  }
+
+  //点击分页按钮加载当前页码数据
+  getPageData($event){
+    console.log($event);
+    this.interfaceService.doQueryMyprojectList(this.storageService.getValue(Global.USER_ACCOUNTID_KEY),$event,null,null,1);
+  }
+
+  //搜索查询
+  searchCode(val){
+    this.interfaceService.doQueryMyprojectList(this.storageService.getValue(Global.USER_ACCOUNTID_KEY),1,val,null,1);
+  }
+
+  filterSearch(val){
+    this.interfaceService.doQueryMyprojectList(this.storageService.getValue(Global.USER_ACCOUNTID_KEY),1,null,val,1);
+  }
+  //工具菜单的显示
+  clickToolMenu(i){
+    if(this.ifshow){
+      this.toolIndex = -1;
+      this.ifshow = false;
+    }else{
+      this.toolIndex = i;
+      this.ifshow = true;
+    }
+    // if(ifshow){
+    //   this.componentRef.destroy();
+    //   ifshow = false;
+    // }else{
+    //   let c = this.comFacRef.resolveComponentFactory(ToolMenuComponent);
+    //   this.componentRef = this.Tool.createComponent(c);
+    //   ifshow = true;
+    // }
+  }
+
+  /**
+   * 发送消息
+   * messageSend
+   */
+ public messageSend (itemId, userId, accountUuid,eventObj) {
+    var sendInfo = eventObj.toElement.parentNode.parentElement.children[0].innerText;//发送的文本字段
+    eventObj.toElement.parentNode.parentElement.children[0].innerText = '';//文本清空
+    if(sendInfo==undefined){
+      return;
+    }
+    this.interfaceService.sendText(itemId, userId, accountUuid, sendInfo);
+    this.statusChanges = this.pushService.setSendMessage$.subscribe((data) => {
+      if (data != null) {
+        console.log("消息发送的数据返回的"+data);
+        this.messageListSelf.push({message:data.message, time:data.date, type:data.type, fileName:data.fileName, headImage:data.iconPath})
+        // 通过accountUnit来进行本地存储跟进发送的文本
+        // var tempMessage = this.storageService.getValue(accountUuid);
+        // tempMessage.push(data.message);
+        // this.storageService.setValue(accountUuid,tempMessage);
+      }
+      this.statusChanges.unsubscribe();
+    });
+    
+  }
+
+  /**
+   * 跟进结构块展示
+   * upFollow
+   */
+  public upFollow (accountUuid,itemId,event,i) {
+    this.tempAccountUuid = accountUuid;
+    this.tempItemId = itemId;
+    if(this.ifshowFollowUp){
+
+      this.ifshowFollowUp = false;
+      this.toolIndexFollowUp = -1;
+      this.interfaceService.doExit(itemId);
+
+      console.log("执行doExit"+itemId);
+
+    } else {
+
+      this.ifshowFollowUp = true;
+      this.toolIndexFollowUp = i;
+      this.interfaceService.doVisit(itemId);
+
+      console.log("执行doVisit"+itemId);
+    }
+  }
+
+
+  /**
+   * 获取当前时间
+   * getNewDate
+   */
+  public getNewDate() {
+    this.remindTime = new Date();
+  }
+
+  /**
+   * 时间提醒弹框
+   * reminderTime
+   */
+  public reminderTime () {
+    this.submitted = false;
+    this.OAdataList = false;
+    this.blockRecipients = false;
+  }
+
+  /**
+   * 时间提醒弹框取消
+   * reminderTimeHide
+   */
+  public reminderTimeHide() {
+    this.submitted = true;
+    this.reminderTimeDate = '';
+  }
+
+  /**
+   * 时间提醒表单提交
+   * onSubmit
+   */
+  public onSubmit() {
+    this.submitted = true;
+    this.reminderTimeDate = this.datePipe.transform(this.reminderTimeDate,'yyyy-MM-dd HH:mm:ss');
+    console.log("这个时间数据是否合理"+this.reminderTimeDate);
+    if(this.tempAccountUuid==undefined||this.tempAccountUuid==null||this.tempAccountUuid==''||this.tempItemId==undefined||this.tempItemId==null||this.tempItemId==''){
+      return;
+    }
+    var tempEmailList = encodeURI(this.reminderTimeEmail);
+    this.interfaceService.doSetTimeReminder(this.tempAccountUuid,this.tempItemId, tempEmailList, this.reminderTimeDate, this.reminderTimeEmailInfo);
+    this.emailstatusChanges = this.pushService.setTimeReminderData$.subscribe((data) => {
+      if (data != null) {
+        //"{pageSize:20,totalNum:100,curPage:1,totalPage:2}"
+        console.log(data);
+      }
+      this.emailstatusChanges.unsubscribe();
+      this.reminderTimeDate = '';
+    });
+  }
+
+  /**
+   * 搜索OA收件人
+   * OAsearchFor
+   */
+  public OAsearchFor(oaList) {
+    if(oaList.value==null||oaList.value==''||oaList.value==undefined){
+      console.log("空数据");
+      return;
+    }
+    this.interfaceService.doSelectEmployee(this.storageService.getValue(Global.USER_ACCOUNTID_KEY),oaList.value);
+    this.pushService.setSelectEmployee$.subscribe((data) => {
+      if (data != null) {
+        console.log(data);
+        this.listRecipientsData = data;
+        this.OAdataList = true;
+      }
+    });
+  }
+
+  /**
+   * 选中收件人
+   */
+  public recipientsChecked(oaList) {
+    if(this.reminderTimeEmail!=null||this.reminderTimeEmail!=undefined||this.reminderTimeEmail!=""){
+      this.blockRecipients = true;
+    }
+    console.log("输出收件人"+this.reminderTimeEmail);
+  }
+  
+/**
+ * 判断是否有文件数据改变
+ */
+  public getFilePath(itemId,userId,accountUuid,event){  
+    let file = event.target.files[0];
+    let fileName = file.name;//文件名readAsBinaryString
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function(event){
+      // console.log("base64图片"+this.result);
+      self.interfaceService.sendFile(itemId, userId, accountUuid, this.result, fileName);
+      self.statusChanges = self.pushService.setSendMessage$.subscribe((data) => {
+        if (data != null) {
+          self.messageListSelf.push({message:data.message, time:data.date, type:data.type,fileName:data.fileName});
+        }
+        self.statusChanges.unsubscribe();
+      })
+    }
+    event.target.value = '';
+  };  
+
+}

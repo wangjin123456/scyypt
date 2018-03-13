@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.OperationDao">
+
+	<select id="findOperation" resultType="com.scyypt.entity.Operation">
+		SELECT
+		operationId,operationName from tb_operation
+	</select>
+
+	<select id="queryOperation" resultType="com.scyypt.entity.Operation"
+		parameterType="String">
+		SELECT
+		operationId,
+		operationName
+		FROM
+		tb_operation
+		WHERE FIND_IN_SET(
+		operationId,
+		(SELECT
+		operationId
+		FROM
+		role_provider
+		WHERE role_id =#{roleId}
+		AND authority_id =#{authorityId})
+		)
+	</select>
+
+</mapper>

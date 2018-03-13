@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ItemUserNotesDao">
+
+	<select id="list" resultType="com.scyypt.entity.ItemUserNotesEntity">
+		 
+		 SELECT u.*
+		 from item_user_notes u
+	</select>
+
+	
+	<insert id="add" parameterType="com.scyypt.entity.ItemUserNotesEntity" useGeneratedKeys="true" keyProperty="id">
+		
+		<selectKey keyProperty="id" resultType="int">  
+            select LAST_INSERT_ID()
+        </selectKey>
+        
+		insert into item_user_notes(noteId, itemId, accountUuid, comment)
+		values (#{noteId}, #{itemId}, #{accountUuid} ,#{comment})
+	</insert>
+
+
+	<update id="edit" parameterType="com.scyypt.entity.ItemUserNotesEntity">
+		UPDATE item_user_notes SET
+		noteId = #{account},
+		itemId = #{itemId},
+		accountUuid = #{accountUuid}, 
+		comment = #{comment}
+		where id=#{id}
+	</update>
+	
+	
+	<delete id="del" parameterType="String">
+		DELETE FROM item_user_notes u
+		<where>
+			<if test="id !=null and id !=''">
+			 and u.id = #{id}
+			</if>
+		</where>
+	</delete>
+	
+	
+	<select id="info" resultType="com.scyypt.entity.ItemUserNotesEntity">
+		 
+		 SELECT u.* from item_user_notes u
+		<where>
+			<if test="id !=null and id !=''">
+			 and u.id = #{id}
+			</if>
+		</where>
+	</select>
+	
+</mapper>

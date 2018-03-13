@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ItemInfoDao">
+
+	<resultMap type="com.scyypt.entity.ItemInfoEntity" id="ItemInfoEntityByPage">
+		<result property="itemId" column="itemId" />
+		<result property="accountUuid" column="accountUuid" />
+		<result property="userName" column="userName" />
+		<result property="itemCooperation" column="itemCooperation" />
+		<result property="itemName" column="itemName" />
+		<result property="province" column="province" />
+		<result property="city" column="city" />
+		<result property="district" column="district" />
+		<result property="itemaArea" column="itemaArea" />
+		<result property="itemJoinArea" column="itemJoinArea" />
+		<result property="itemExplain" column="itemExplain" />
+		<result property="itemCreateDatetime" column="itemCreateDatetime" />
+		<result property="itemProgress" column="itemProgress" />
+		<result property="itemFollowDatetime" column="itemFollowDatetime" />
+		<result property="itemUnmarked" column="itemUnmarked" />
+
+		<collection property="infoProvider" ofType="com.scyypt.entity.InfoProvider">
+			<id column="providerId" property="providerId"></id>
+			<result column="providerName" property="providerName"></result>
+			<result column="providerTel" property="providerTel"></result>
+		</collection>
+
+		<collection property="projectAttention" ofType="com.scyypt.entity.ProjectAttention">
+			<id column="attentionId" property="attentionId"></id>
+			<result column="accountUuid" property="accountUuid"></result>
+			<result column="name" property="name"></result>
+		</collection>
+
+		<collection property="relevanceProjects" ofType="com.scyypt.entity.RelevanceProjects">
+			<id column="relevanceId" property="relevanceId"></id>
+			<result column="relevanceProjectsId" property="relevanceProjectsId"></result>
+			<result column="relevanceItemName" property="relevanceItemName"></result>
+		</collection>
+	</resultMap>
+
+
+
+	<!--分页查询我的项目信息 -->
+	<select id="findAllByPage" parameterType="com.scyypt.entity.ItemInfoEntity"
+		resultMap="ItemInfoEntityByPage">
+		SELECT
+		* FROM item_info i, project_attention a
+		<where>
+			<if test="itemUnmarked !=null and itemUnmarked !=''">
+				i.itemUnmarked=#{itemUnmarked}
+			</if>
+
+			<if test="accountUuid !=null and  accountUuid !=''">
+				AND i.accountUuid = #{accountUuid} or (i.itemId = a.itemId and a.accountUuid=#{accountUuid})
+			</if>
+
+			<if test="itemProgress !=null and  itemProgress !=''">
+				AND i.itemProgress =#{itemProgress}
+			</if>
+
+			<if test="context !=null and  context !=''">
+				AND (i.itemName LIKE concat('%',#{context},'%')
+				OR
+				i.userName LIKE concat('%',#{context},'%')
+				OR i.itemCooperation LIKE
+				concat('%',#{context},'%') )
+			</if>
+		</where>
+		ORDER BY (itemCreateDatetime) DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+
+	<!--根据用户编号获取我的项目总记录数 -->
+	<select id="findCount" resultType="int"
+		parameterType="com.scyypt.entity.ItemInfoEntity">
+		SELECT
+		COUNT(1) FROM item_info
+		<where>
+			<if test="itemUnmarked !=null and itemUnmarked !=''">
+				`itemUnmarked`=#{itemUnmarked}
+			</if>
+
+			<if test="accountUuid !=null and  accountUuid !=''">
+				AND `accountUuid` = #{accountUuid}
+			</if>
+
+			<if test="itemProgress !=null and  itemProgress !=''">
+				AND itemProgress =#{itemProgress}
+			</if>
+
+			<if test="context !=null and  context !=''">
+				AND (`itemName` LIKE concat('%',#{context},'%')
+				OR
+				`userName` LIKE concat('%',#{context},'%')
+				OR `itemCooperation` LIKE
+				concat('%',#{context},'%') )
+			</if>
+		</where>
+	</select>
+
+	<!--添加项目信息 -->
+	<insert id="add" parameterType="com.scyypt.entity.ItemInfoEntity"
+		useGeneratedKeys="true" keyProperty="itemId">
+		INSERT INTO
+		item_info(accountUuid,userName,itemCooperation,flag,itemName,province,city,district,itemAddress,itemaArea,itemJoinArea,itemExplain,itemCreateDatetime,itemProgress,itemFollowDatetime,itemUnmarked)
+		VALUES
+		(#{accountUuid},#{userName},#{itemCooperation},#{flag},#{itemName},#{province},#{city},#{district},#{itemAddress},#{itemaArea},#{itemJoinArea},#{itemExplain},NOW(),#{itemProgress},NOW(),#{itemUnmarked})
+	</insert>
+
+
+	<!--模糊查询项目信息 -->
+	<select id="findAllLike" parameterType="String"
+		resultType="com.scyypt.entity.ItemInfoEntity">
+		SELECT itemId,itemName FROM item_info
+		<where>
+			<if test="itemName != null and itemName!='' ">
+				itemName LIKE concat('%',#{itemName},'%')
+			</if>
+		</where>
+
+	</select>
+
+	<update id="edit" parameterType="com.scyypt.entity.ItemInfoEntity">
+		UPDATE item_info SET
+		name=#{name},
+		title=#{title},
+		address=#{address},
+		area=#{area},
+		realArea=#{realArea},
+		provider=#{provider},
+		providerPhone=#{providerPhone},
+		createDatetime=#{createDatetime},
+		pictures=#{pictures},
+		comment=#{comment}
+		where id=#{id}
+	</update>
+
+	<!--根据id删除我的项目 -->
+	<delete id="del" parameterType="String">
+		DELETE FROM item_info
+		<where>
+			<if test="itemId !=null and itemId !=''">
+				itemId = #{itemId}
+			</if>
+		</where>
+	</delete>
+
+
+	<!--统计我的项目面积 -->
+	<select id="countArea" parameterType="String"
+		resultType="com.scyypt.entity.ItemInfoEntity">
+		SELECT
+		SUM(itemaArea) AS itemaArea,
+		SUM(itemJoinArea) AS itemJoinArea
+		FROM
+		item_info
+		<where>
+			<if test=" accountUuid !=null and accountUuid !=''">
+				accountUuid=#{accountUuid}
+			</if>
+			<if test=" itemUnmarked !=null and itemUnmarked !=''">
+				AND itemUnmarked =#{itemUnmarked}
+			</if>
+			<if test=" startDate!=null and startDate!='' ">
+				<![CDATA[AND DATE(itemCreateDatetime) >= #{startDate}]]>
+			</if>
+			<if test=" terminalDate !=null and terminalDate !='' ">
+				<![CDATA[AND DATE(itemCreateDatetime) <= #{terminalDate}]]>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 设置时间提醒 -->
+	<update id="updateReminder" parameterType="com.scyypt.entity.ItemInfoEntity">
+		UPDATE item_info
+		set reminder_oa = #{reminder_oa, jdbcType=VARCHAR},
+		reminder_expire = #{reminder_expire, jdbcType=DATE},
+		reminder_days = #{reminder_days, jdbcType=INTEGER},
+		reminder_content = #{reminder_content, jdbcType=VARCHAR}
+		WHERE itemId = #{itemId}
+	</update>
+
+	<select id="getNextProgressId" parameterType="String"
+		resultType="String">
+		SELECT * FROM project_progress
+		<where>
+			<if test=" itemProgressId !=null and itemProgressId !='' ">
+				progressId > #{itemProgressId}
+			</if>
+		</where>
+		
+		ORDER BY progressId asc limit 1
+	</select>
+	
+	<!--  -->
+	<update id="updateProgress" parameterType="String">
+
+		UPDATE item_info
+		set itemProgress = #{itemProgressId, jdbcType=INTEGER}
+		WHERE itemId = #{itemId}	
+	</update>
+	
+</mapper>

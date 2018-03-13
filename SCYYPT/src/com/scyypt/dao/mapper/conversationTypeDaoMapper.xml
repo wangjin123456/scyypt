@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ConversationTypeDao">
+	<select id="queryAll" resultType="com.scyypt.entity.ConversationType">
+		SELECT
+		`conversationId`,`conversationTitle`,`conversationComment` FROM
+		`conversation_type`
+	</select>
+	<insert id="addConversationType" parameterType="com.scyypt.entity.ConversationType">
+		INSERT INTO
+		`conversation_type`(`conversationTitle`,`conversationComment`)
+		VALUES
+		(#{conversationTitle},#{conversationComment})
+	</insert>
+	<update id="updateConversationType" parameterType="com.scyypt.entity.ConversationType">
+		UPDATE
+		`conversation_type` SET
+		`conversationTitle`=#{conversationTitle},`conversationComment`=#{conversationComment}
+		WHERE `conversationId`=#{conversationId}
+	</update>
+	<delete id="delConversationType" parameterType="String">
+		DELETE FROM `conversation_type`
+		<where>
+			<if test="conversationId !=null and conversationId !=''">
+				`conversationId`= #{conversationId}
+			</if>
+		</where>
+	</delete>
+
+</mapper>

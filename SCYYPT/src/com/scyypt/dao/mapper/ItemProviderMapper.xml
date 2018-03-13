@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ItemProviderDao">
+	<!-- 添加项目关联关系 -->
+	<insert id="addItemProvider" parameterType="com.scyypt.entity.ItemProvider">
+		INSERT INTO
+		item_provider(itemId,providerId,attentionId,relevanceId)
+		VALUES(#{itemId},#{providerId},#{attentionId},#{relevanceId})
+	</insert>
+
+	<!--删除项目关系 -->
+	<delete id="delItemProvider" parameterType="String">
+		DELETE FROM item_provider
+		<where>
+			<if test="itemId != null and itemId != ''">
+				itemId=#{itemId}
+			</if>
+			<if test="providerId != null and providerId != ''">
+				AND providerId=#{providerId}
+			</if>
+			<if test="userId != null and userId != ''">
+				AND userId=#{userId}
+			</if>
+		</where>
+	</delete>
+
+
+</mapper>

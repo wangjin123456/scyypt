@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.UserDao">
+
+	<resultMap type="com.scyypt.entity.UserEntity" id="UserInfoMap">
+		<result column="u_id" property="u_id" />
+		<result column="accountUuid" property="accountUuid" />
+		<result column="corpId" property="corpId" />
+		<result column="userName" property="userName" />
+		<result column="name" property="name" />
+		<result column="mobile" property="mobile" />
+		<result column="email" property="email" />
+		<result column="sex" property="sex" />
+		<result column="jobUuid" property="jobUuid" />
+		<result column="jobType" property="jobType" />
+
+		<association property="role" javaType="com.scyypt.entity.Role">
+			<id column="role_id" property="role_id" />
+			<result column="role_name" property="role_name" />
+		</association>
+
+		<collection property="authority" ofType="com.scyypt.entity.Authority">
+			<id column="authority_id" property="authority_id" />
+			<result column="operate" property="operate" />
+		</collection>
+
+		<collection property="uRAProvider" ofType="com.scyypt.entity.URAProvider">
+			<result column="status" property="status" />
+		</collection>
+
+	</resultMap>
+
+
+	<select id="searchUser" parameterType="com.scyypt.entity.UserEntity"
+		resultType="com.scyypt.entity.UserEntity">
+		SELECT
+		*
+		FROM tb_user
+		WHERE
+		accountUuid =#{accountUuid} AND
+		name=#{name}
+	</select>
+
+	<select id="queryUserinfo" parameterType="com.scyypt.entity.UserEntity"
+		resultType="com.scyypt.entity.UserEntity">
+		SELECT accountUuid,name,userName,role_id FROM tb_user
+		WHERE
+		accountUuid=#{accountUuid} AND name=#{name}
+	</select>
+
+	<update id="updateUser" parameterType="com.scyypt.entity.UserEntity">
+		UPDATE tb_user SET
+		role_id=#{role_id}
+		WHERE u_id=#{u_id}
+	</update>
+
+	<select id="showUsers" parameterType="String" resultMap="UserInfoMap">
+		SELECT
+		u.*,r.role_name FROM tb_user u
+		INNER JOIN tb_role r ON u.role_id=r.role_id
+		WHERE
+		corpId =
+		#{orgUuid}
+	</select>
+
+	<insert id="addUsers" parameterType="com.scyypt.entity.UserEntity"
+		useGeneratedKeys="true" keyProperty="u_id">
+
+		<selectKey keyProperty="u_id" resultType="int">
+			select
+			LAST_INSERT_ID()
+		</selectKey>
+
+		INSERT INTO
+		tb_user(accountUuid,corpId,userName,name,mobile,email,sex,jobType,jobUuid,role_id)
+		VALUES(#{accountUuid},#{corpId},#{userName},#{name},#{mobile},#{email},#{sex},#{jobType},#{jobUuid},#{role_id})
+
+	</insert>
+
+</mapper>

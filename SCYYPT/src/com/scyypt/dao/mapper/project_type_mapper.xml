@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.ProjectTypeDao">
+	<select id="findAll" resultType="com.scyypt.entity.ProjectType">
+		SELECT
+		projectType_id,projectType_name,projectType_Comment FROM project_type
+	</select>
+	<insert id="addProject_Type" parameterType="com.scyypt.entity.ProjectType">
+		INSERT INTO
+		project_type(projectType_name,projectType_Comment)VALUES (#{projectType_name},#{projectType_Comment})
+	</insert>
+	<update id="updateProject_Type" parameterType="com.scyypt.entity.ProjectType">
+		UPDATE
+		project_type SET projectType_name=#{projectType_name},projectType_Comment=#{projectType_Comment} WHERE
+		projectType_id=#{projectType_id}
+	</update>
+	<delete id="del" parameterType="String">
+		DELETE FROM project_type WHERE projectType_id=#{projectType_id}
+	</delete>
+</mapper>

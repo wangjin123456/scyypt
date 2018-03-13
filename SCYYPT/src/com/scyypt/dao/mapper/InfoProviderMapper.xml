@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.InfoProviderDao">
+
+	<!--添加提供信息者 -->
+	<insert id="addInfoProvider" parameterType="com.scyypt.entity.InfoProvider"
+		useGeneratedKeys="true" keyProperty="providerId">
+		INSERT INTO
+		info_provider(providerName,providerTel)
+		VALUES(#{providerName},#{providerTel})
+	</insert>
+	
+	<!--删除信息提供者  -->
+	<delete id="del" parameterType="String">
+		DELETE FROM info_provider
+		<where>
+			<if test="providerId !=null and providerId !=''">
+				providerId=#{providerId}
+			</if>
+		</where>
+	</delete>
+
+</mapper>

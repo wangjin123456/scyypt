@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scyypt.dao.LogDao">
+
+	<insert id="addLog" parameterType="com.scyypt.entity.LogEntity">
+		INSERT INTO
+		tb_logger
+		(userName,date,handle,state,comment)
+		VALUES(#{userName},#{date},#{handle},#{state},#{comment})
+	</insert>
+
+	<select id="findAllCount" parameterType="String" resultType="int">
+		select COUNT(1) from tb_logger
+		<where>
+			<if test="userName !=null and userName !=''">
+				userName = #{userName}
+			</if>
+		</where>
+	</select>
+
+	<!--分页查询我的日志信息 -->
+	<select id="findLogByPage" resultType="com.scyypt.entity.LogEntity" parameterType="String">
+		select logId, userName, date, handle, state, comment FROM tb_logger
+		<where>
+			<if test="userName !=null and userName !=''">
+				userName=#{userName}
+			</if>
+		</where>
+		LIMIT #{start},#{pageSize}
+	</select>
+
+	<delete id="deleteLog" parameterType="String">
+		DELETE FROM tb_logger
+		<where>
+			<if test="logId !=null and logId !=''">
+				logId=#{logId}
+			</if>
+		</where>
+	</delete>
+
+</mapper>
